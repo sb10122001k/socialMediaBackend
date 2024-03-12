@@ -137,13 +137,15 @@ const getFeed = async(req,res)=>{
 
 const getUserProfile =async(req,res) =>{
     try {
-        const querry = 'select post.id,images,likedBy,comments,commentUserIds,name,postedBy,profile,followers_ids,following_ids from post join users on users.id = post.postedBy where postedBy  = $1 order by id desc'
+        const querry = 'select * from post where postedBy  = $1 order by id desc'
         const value =[req.query.id?req.query.id:req.userId]
         let result = await db.query(querry,value);
         result = await getCommentsandLikeDetail(result,req.userId)
         console.log(result.rows,"Data")
+        const userQuerry = 'select id,name,email,profile,followers_ids,following_ids from users where id= $1';
+        const userDetails=await db.query(userQuerry,value);
 
-        res.status(200).json({error:false,data:result.rows})
+        res.status(200).json({error:false,postDetails:result.rows,userDetails:userDetails.rows[0]})
     } catch (error) {
         res.status(500).json({error:true,message:'Error While Fetching User Post'})
     }
