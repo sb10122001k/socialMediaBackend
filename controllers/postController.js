@@ -9,6 +9,41 @@ createPostTable()
     .catch(error => {
         console.error('Error creating table:', error);
     });
+
+const getCommentsandLikeDetail = async(result,userId) =>{
+    await Promise.all(
+        result.rows.map(async (post,i)=>{
+            if(post.likedby.includes( userId) )
+            {
+                result.rows[i].liked=true
+            }
+            else 
+            {
+                result.rows[i].liked=false
+            }
+            const comments=[];
+            await Promise.all(
+                post.commentuserids.map(async(item,index)=>{
+                    const selectUserQuerry = 'select * from users where id = $1'
+                    const selectUserQuerryValue=[item]
+                    const userDetails = await db.query(selectUserQuerry,selectUserQuerryValue)
+                    console.log(userDetails.rows[0],"data")
+                    const comment={
+                        id:item,
+                        comment:result.rows[i].comments[index],
+                        profilePic:userDetails.rows[0].profile,
+                        name:userDetails.rows[0].name
+                    }
+                    comments.push(comment)
+                })
+            )
+                           
+            result.rows[i].comments=comments
+
+        })
+    )
+    return result;
+}
 const createPost = async (req, res) => {
     try {
         const images = [];
@@ -87,9 +122,35 @@ const createComment = async (req, res) => {
     }
 }
 
+const getFeed = async(req,res)=>{
+    try {
+        const querry = 'select * from post where postedBy  in (select unnest(following_ids) from users where id = $1 ) order by id desc'
+        const value =[req.userId]
+        let result = await db.query(querry,value);
+        result = await getCommentsandLikeDetail(result,req.userId)
+        res.status(200).json({error:false,data:result.rows})
+    } catch (error) {
+        console.log(error)
+      res.status(500).json({error:true,message:error})
+    }
+}
+
+const getUserProfile =async(req,res) =>{
+    try {
+        const querry = 'select * from post where postedBy  = $1 order by id desc'
+        const value =[req.query.id?req.query.id:req.userId]
+        let result = await db.query(querry,value);
+        result = await getCommentsandLikeDetail(result,req.userId)
+        console.log(result.rows,"Data")
+        res.status(200).json({error:false,data:result.rows})
+    } catch (error) {
+        res.status(500).json({error:true,message:'Error While Fetching User Post'})
+    }
+}
 
 module.exports = {
     createPost,
     likeUnlikePost,
-    createComment
+    createComment,getFeed,
+    getUserProfile
 }
