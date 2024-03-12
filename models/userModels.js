@@ -11,7 +11,8 @@ const createUserTable = async () => {
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(100) NOT NULL,
                 profile VARCHAR (500) ,
-                friend_ids  INTEGER[]             
+                followers_ids  INTEGER[]  ,
+                following_ids INTEGER[]        
             )
         `;
 
@@ -21,5 +22,7 @@ const createUserTable = async () => {
         throw error;
     }
 };
+
+
 
 module.exports = { createUserTable };
