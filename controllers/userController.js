@@ -101,6 +101,63 @@ const followUnfollowPeople = async(req,res) =>{
         res.status(500).json({error:true,message:error})
     }
 }
+const getPeopleNotFollowDetails = async(req,res) =>{
+    try {
+        const querry = 'SELECT id,name,email,profile,false as isfollowing FROM users WHERE NOT($1 = ANY( users.followers_ids))'
+        const value = [req.userId]
+        console.log(req.userId)
+        const response = await db.query(querry,value)
+        res.status(200).json({error:false,data:response.rows})
+    } catch (error) {
+        console.log(error)
+       res.status(500).json({error:true,message:"Error while finding User Details"}) 
+    }
+}
+
+const getFollowersDetails = async(req,res) =>{
+    try {
+        const querry = 'SELECT id,name,email,profile,followers_ids FROM users WHERE $1 = ANY( users.followers_ids)'
+        const value = [req.query.id?req.query.id:req.userId]
+        console.log(req.userId)
+        const result = await db.query(querry,value)
+        result.rows.map((item,index)=>{
+            if(item.followers_ids.includes(req.userId))
+            {
+                result.rows[index].isFollowing= true
+            }
+            else
+            {
+                result.rows[index].isFollowing= false;
+            }
+        })
+        res.status(200).json({error:false,data:result.rows})
+    } catch (error) {
+        console.log(error)
+       res.status(500).json({error:true,message:"Error while finding User Details"}) 
+    }
+}
+const getFollowingDetails = async(req,res) =>{
+    try {
+        const querry = 'SELECT id,name,email,profile,followers_ids FROM users WHERE $1 = ANY( users.following_ids)'
+        const value = [req.query.id?req.query.id:req.userId]
+        console.log(req.userId)
+        const result = await db.query(querry,value)
+        result.rows.map((item,index)=>{
+            if(item.followers_ids.includes(req.userId))
+            {
+                result.rows[index].isFollowing= true
+            }
+            else
+            {
+                result.rows[index].isFollowing= false;
+            }
+        })
+        res.status(200).json({error:false,data:result.rows})
+    } catch (error) {
+        console.log(error)
+       res.status(500).json({error:true,message:"Error while finding User Details"}) 
+    }
+}
 
 
 
@@ -108,5 +165,8 @@ const followUnfollowPeople = async(req,res) =>{
 module.exports ={
     createUser,
     login,
-    followUnfollowPeople
+    followUnfollowPeople,
+    getPeopleNotFollowDetails,
+    getFollowersDetails,
+    getFollowingDetails
 }
