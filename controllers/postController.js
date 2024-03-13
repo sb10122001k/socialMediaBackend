@@ -47,13 +47,13 @@ const getCommentsandLikeDetail = async(result,userId) =>{
 const createPost = async (req, res) => {
     try {
         const images = [];
-        await Promise.all(
-            req.files.images.map(async (item) => {
-                const url = await uploadImage(item);
-                console.log(url, "Url")
-                images.push(url);
-            })
-        )
+        let url=''
+        if(req.file)
+        {
+            url =await uploadImage(req.file);
+
+        }
+        images.push(url)
 
 
         const query = 'INSERT INTO post (images, postedBy, likedBy,comments,commentUserIds) VALUES ($1, $2, $3,$4,$5) RETURNING *';
