@@ -5,9 +5,7 @@ const authenticateUser = require('../utils/authenticate');
 const router= express.Router()
 
 const storage = multer.memoryStorage();
-const upload = multer({
-    storage: storage,
-});
+const upload = multer({storage})
 
 router.post('/createPost',authenticateUser,upload.single('images'),createPost)
 router.post('/likeUnlikePost',authenticateUser,likeUnlikePost)
